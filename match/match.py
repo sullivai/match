@@ -31,8 +31,10 @@ def doTheMatch(freeling, lingpref, shiftpref, leftovers, matched, quota, couples
         try:
             shift = lingpref[ling].pop()
         except:
+            print("NO MATCH POSSIBLE... Add "+ling+" to leftovers")
             leftovers.append(ling)
             if ling in couples:
+                print("Add partner "+couples[ling]+" to leftovers")
                 leftovers.append(couples[ling])
                 if couples[ling] in freeling:
                     freeling.remove(couples[ling])
@@ -113,7 +115,7 @@ def doTheMatch(freeling, lingpref, shiftpref, leftovers, matched, quota, couples
             i = shiftpref[shift].index(worstling)
             #del shiftpref[shift][(i+1):]
             del shiftpref[shift][:i]
-            print(shiftpref[shift])
+            #print(shiftpref[shift])
 
 
     
@@ -149,6 +151,16 @@ if __name__ == "__main__":
         print(item,end=" | ")
     print("\n")    
 
+    shiftpref2 = {}
+    for item in shiftpref:
+        x = []
+        for thing in shiftpref[item]:
+            x.append(thing)
+        shiftpref2[item] = x
+
+        
+
+
     # Process special cases
     overridden = mf.processOverrides(manual, quota, freeling, shiftpref)
     mf.processMeritlist(merit, overridden, lingpref, quota, freeling, shiftpref)
@@ -162,8 +174,8 @@ if __name__ == "__main__":
     leftovers = [] 
     doTheMatch(freeling, lingpref, shiftpref, leftovers, matched, quota)
 
-    for item in shiftpref['DMON-THU']:
-        print(item,end=" | ")
+    #for item in shiftpref['DMON-THU']:
+    #    print(item,end=" | ")
     print("\n")    
 
 
@@ -177,10 +189,11 @@ if __name__ == "__main__":
     doTheMatch(freeling, lingpref, shiftpref, leftovers, matched, quota, couples, rebalance)
     print("\n\nNext\n\n")
 
-    for item in shiftpref['DMON-THU']:
-        print(item,end=" | ")
+    #for item in shiftpref['DMON-THU']:
+    #    print(item,end=" | ")
     print("\n")  
-
+    print("AFTER ROUND 1")
+    uf.printMatches(matched)
 
 
     '''
@@ -202,6 +215,75 @@ if __name__ == "__main__":
     print("rebalance")
     print(rebalance)
     uf.printQuotas(quota)
+
+    #for poo in rebalance:
+    #    print(poo)
+    #    # for each person assigned to poo
+    #    assignedlings = [ling for ling, shift in matched.items() if shift == poo]
+        
+    #    betterlings = shiftpref[poo][1:]
+
+    #    for ling in betterlings:
+    #        if ling in matched:
+    #            s = matched.pop(ling)
+    #            freeling.append(ling)
+    #            if ling in couples and couples[ling] in freeling:
+    #                freeling.remove(couples[ling])
+    #                couple[ling] = couples[ling]
+    #                freeling.remove(ling)
+    #            quota[s] += 1
+    #            if s not in rebalance:
+    #                rebalance.append(s)
+    #    doTheMatch(freeling, lingpref, shiftpref2, leftovers, matched, quota, couples, rebalance)
+    #    #while couple:
+    #    #    p1, p2 = couple.popitem()
+    #    #    freeling.append(p1)
+    #    #    #freeling.append(p2)
+    #    #doTheMatch(freeling, lingpref, shiftpref2, leftovers, matched, quota, couples, rebalance)
+    #    print("\n\nNext\n\n")
+
+
+    print(rebalance)
+    uf.printQuotas(quota)
+    print("AFTER ROUND 2")
+    uf.printMatches(matched)
+    print('x')
+    '''
+        
+        #for ling in assignedlings:
+            print("\t"+ling)
+            # get each shift they prefer to poo
+            lpreflist = lingpref[ling]
+            lpreflist.append(matched[ling])
+            preferredshifts = list(set(quota.keys()) - set(lpreflist))
+            #get each person assigned to that shift
+
+            # if that shift prefers ling to anyone it's assigned to, problem
+            for sh in preferredshifts:
+                assignees = [name for name, shft in matched.items() if shft == sh]
+                lingrank = getRank(ling,shiftpref[sh])
+                for name in assignees:
+                    assignedrank = getRank(name,shiftpref[sh])
+                    if lingrank == -1 or lingrank > assignedrank:
+                        print("\t\t"+sh + " ("+str(lingrank)+") "+" "+name+" ("+str(assignedrank)+")" +  " OK")
+                    else:
+                        print("\t\t"+ sh + " ("+str(lingrank)+") "+" "+name+" ("+str(assignedrank)+")" + " blocks" )
+                        matched.pop(name)
+                        freeling.append(name)
+                        quota[sh] += 1
+                        if name in couples:
+                            matched[couples[name]].pop()
+                            quota[sh] += 1
+                        rebalance.append(sh)
+    '''
+
+
+
+                  
+        #print('x')
+
+
+
 
     '''
     while rebalance:
@@ -257,7 +339,7 @@ if __name__ == "__main__":
     #    print(shiftpref[item])
 
     print("---------------")
-
+    '''
     #check stability
     for ling in matched:
         print("\n"+ling+" "+matched[ling])
@@ -285,7 +367,7 @@ if __name__ == "__main__":
                 else:
                     print(name +": "+str(assignedrank),end=" ")
                     print("PROBLEM")
-
+    '''
 
     # Slot the rest wherever they'll fit
     mf.assignLeftovers(leftovers, quota, shiftpref, matched)
