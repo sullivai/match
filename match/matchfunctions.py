@@ -90,6 +90,9 @@ def assignLeftovers(leftovers, quota, shiftpref, matched):
     flag = True
 
     while leftovers and flag:
+        #notMid = [shift for shift, num in quota.items() if "shift does not start with M")
+
+
         # find shift(s) with most vacancies
         maxVacancies = [shift for shift, num in quota.items() if quota[shift] == max(quota.values())]
         vacancy = maxVacancies.pop()
@@ -106,7 +109,8 @@ def assignLeftovers(leftovers, quota, shiftpref, matched):
                 break
         if quota[vacancy] > 0:        
             matched[ling] = vacancy
-            leftovers.remove(ling)
+            if ling in leftovers:
+                leftovers.remove(ling)
             quota[vacancy] -= 1
 
 
@@ -129,7 +133,172 @@ def assignLWOP(leftovers, lwop, quota, matched):
 
 
 
+def getRank(p, shiftpreflist):
+    try:
+        return shiftpreflist.index(p)
+    except:
+        return -1
 
+def doTheMatch(freeling, lingpref, shiftpref, leftovers, matched, quota, couples={}, rebalance=[]):
+    while freeling:
+        # Get first linguist
+        ling = freeling.pop()
+        
+        # Get linguist's nth shift choice (if no choice left, add ling to leftovers)
+        try:
+            shift = lingpref[ling].pop()
+        except:
+            print("NO MATCH POSSIBLE... Add "+ling+" to leftovers")
+            leftovers.append(ling)
+            if ling in couples:
+                print("Add partner "+couples[ling]+" to leftovers")
+                leftovers.append(couples[ling])
+                if couples[ling] in freeling:
+                    freeling.remove(couples[ling])
+            continue
+        
+        print(ling + " trying " + shift + "...", end=" ")
+        
+        # Reject linguist if not in shift preferences
+        if ling not in shiftpref[shift]:
+            print("REJECTED")
+            freeling.append(ling)
+            continue
+
+        # Reject linguist if part of couple and partner not in shift preferences
+        if ling in couples and couples[ling] not in shiftpref[shift]:
+            print("partner REJECTED")
+            freeling.append(ling)
+            continue
+
+        # Otherwise accept    
+        print("ACCEPTED")    
+        matched[ling] = shift
+        quota[shift] -= 1
+
+        if ling in couples:
+            matched[couples[ling]] = shift
+            if couples[ling] in freeling:
+                freeling.remove(couples[ling])
+            quota[shift] -= 1
+            print(couples[ling] + " assigned to " + shift + " with partner")
+   
+        # If too many people assigned to this shift, drop the worst one(s)
+        hold = '' 
+        while quota[shift] < 0:
+        #if quota[shift] < 0:
+            worstling = getWorst(getMatched(shift, matched), shiftpref[shift])
+            matched.pop(worstling)
+            quota[shift] += 1
+            freeling.append(worstling)
+            print(worstling + " bumped from " + shift)
+
+            # If part of a couple drop partner and add shift to rebalance list
+            if worstling in couples: 
+                matched.pop(couples[worstling])
+                quota[shift] += 1
+                if shift not in rebalance:
+                    rebalance.append(shift)
+                print(couples[worstling] + " bumped from " + shift)
+                if hold != '':
+                    freeling.remove(hold)
+                    matched[hold] = shift
+                    quota[shift] -= 1
+            else:
+                hold = worstling
+
+          
+        # If no more of this slot available, pare down the pref list
+        if quota[shift] == 0:
+            worstling = getWorst(getMatched(shift, matched), shiftpref[shift])
+            #if worstling not in couples:
+            i = shiftpref[shift].index(worstling)
+            #del shiftpref[shift][(i+1):]
+            del shiftpref[shift][:i]
+            #print(shiftpref[shift])
+
+
+
+
+
+
+
+    '''
+    #check stability
+    for ling in matched:
+        print("\n"+ling+" "+matched[ling])
+        lpreflist = lingpref[ling]
+        lpreflist.append(matched[ling])
+        #x = lingpref[l] #.index(matched[l])
+
+        preferredshifts = list(set(quota.keys()) - set(lpreflist))
+        print(preferredshifts)
+        
+        for sh in preferredshifts:
+            lingrank = getRank(ling,shiftpref[sh])
+            
+            print(sh +" (" + str(lingrank) +")")
+            assignedlings = [ling for ling, shift in matched.items() if shift == sh]
+            #print(v)
+            #if s prefers ling to matched[s]
+            for name in assignedlings:
+                assignedrank = getRank(name,shiftpref[sh])
+
+                if lingrank < assignedrank:
+                    ghj = ''
+                
+                    #print("OK")
+                else:
+                    print(name +": "+str(assignedrank),end=" ")
+                    print("PROBLEM")
+    '''
+    '''
+    while rebalance:
+        shift = rebalance.pop()
+        print("========> "+shift)
+        #for item in shiftpref[shift]:
+        #    print(item)
+        worst = getWorst(getMatched(shift, matched), shiftpref[shift])
+        
+        i = getRank(getWorst(getMatched(shift, matched), shiftpref[shift]), shiftpref[shift])
+        print(shift)
+        for item in shiftpref[shift][(i+1):]:
+            print(item)
+            #assrank = getRank(item,shiftpref[sh])
+            #lingrank = getRank(matched
+            #freeling.append(item)
+            try:
+                qq = matched.pop(item)
+                
+            except:
+                continue
+            freeling.append(item)
+            quota[qq] += 1
+            if item in couples:
+                try:
+                    qq = matched.pop(couples[item])
+                    quota[qq] += 1
+                except:
+                    pass
+            if qq not in rebalance:
+                rebalance.append(qq)
+
+            #processCouples(couple, freeling)
+            #processLWOP(lwop, freeling)
+            #for name in merit:
+            #    try:
+            #        freeling.remove(name)
+            #    except:
+            #        continue 
+            #for name in manual:
+            #    try:
+            #        freeling.remove(name)
+            #    except:
+            #        continue 
+     
+        doTheMatch(freeling, lingpref, shiftpref, leftovers, matched, quota)
+    
+    '''
 
 
 
@@ -160,10 +329,6 @@ def getWorst(matched, shiftpreflist):
         except:
             continue
     return worst
-
-
-
-
 
 
 
