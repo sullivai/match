@@ -57,9 +57,9 @@ if __name__ == "__main__":
     # Rebalance
     print("Rebalance")   
 
-    #for shift in rebalance:
-    while rebalance:
-        shift = rebalance.pop()
+    for shift in rebalance:
+    
+        rebalance.remove(shift)
 
         # for each person assigned to shift
         # assignedlings = [ling for ling, sh in matched.items() if sh == shift]
@@ -103,7 +103,7 @@ if __name__ == "__main__":
 
 
 
-    print(rebalance)
+    #print(rebalance)
 
     print("---------------")
 

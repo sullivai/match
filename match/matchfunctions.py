@@ -124,11 +124,11 @@ def assignLeftovers(leftovers, quota, shiftpref, matched):
 def assignLWOP(leftovers, lwop, quota, matched):    
     print(leftovers)
     leftovers.extend(lwop)
-    print("---------------------------------")
-    print(leftovers)
+    #print("---------------------------------")
+    #print(leftovers)
     while leftovers:
-        print("---------------------------------")
-        print(leftovers)
+        #print("---------------------------------")
+        #print(leftovers)
         for shift in quota:
             if leftovers and quota[shift] > 0:
                 ling = leftovers.pop()
