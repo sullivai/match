@@ -21,6 +21,10 @@ def processPreflist(preflist):
     return backup
 
 
+def restorePref(list, backup):
+    for item in backup:
+        list[item] = preservePref(backup[item])   
+
 
 
 

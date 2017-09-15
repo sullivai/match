@@ -56,6 +56,11 @@ def processLWOP(lwop, freeling):
         except:
             continue
 
+def couplesToEnd(couple, freeling):
+    while couple:
+        p1, p2 = couple.popitem()
+        freeling.insert(0, p1)
+
 
 # Remove couples from matching process; they will be processed after first round
 def processCouples(couple, freeling):
